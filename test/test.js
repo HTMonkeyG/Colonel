@@ -1,12 +1,17 @@
 import { StringReader } from "../include/StringReader.js";
-import { CommandDispacher } from "../CommanDispacher.js";
+import { CommandDispacher } from "../CommanDispatcher.js";
 import { LiteralArgumentBuilder, RequiredArgumentBuilder } from "../include/ArgumentBuilder.js";
 import { BoolArgumentType } from "../include/ArgumentType.js";
 import { ContextChain } from "../include/Context.js";
+import { EventEmitter } from "node:events";
 
 var t = new StringReader("qwq true");
 
 var k = new CommandDispacher();
+
+var ev = new EventEmitter();
+k.setConsumer(ev);
+ev.on("oncommandcomplete", (...args) => console.log(args, 9))
 
 k.register(
   (new LiteralArgumentBuilder("qwq")

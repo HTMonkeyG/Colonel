@@ -316,10 +316,10 @@ class ContextChain {
     var contextToUse = executable.copyFor(source);
     try {
       var result = executable.getCommand()(contextToUse);
-      //resultConsumer.onCommandComplete(contextToUse, true, result);
+      resultConsumer.emit("oncommandcomplete", contextToUse, true, result);
       return forkedMode ? 1 : result;
     } catch (ex) {
-      //resultConsumer.onCommandComplete(contextToUse, false, 0);
+      resultConsumer.emit("oncommandcomplete", contextToUse, false, 0);
       if (forkedMode)
         return 0;
       throw ex;
