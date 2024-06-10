@@ -1,5 +1,5 @@
 import { StringRange, StringReader } from "./include/StringReader.js";
-import { CommandDispatcher } from "./CommanDispatcher.js";
+import { CommandDispatcher } from "./CommandDispatcher.js";
 import { ArgumentBuilder, LiteralArgumentBuilder, RequiredArgumentBuilder } from "./include/ArgumentBuilder.js";
 import { ArgumentType, integer, bool, IntegerArgumentType } from "./include/ArgumentType.js";
 import { CommandSyntaxException } from "./include/Exceptions.js";
