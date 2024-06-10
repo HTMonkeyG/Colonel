@@ -26,7 +26,7 @@ class CommandSyntaxException extends Error {
   static CONTEXT_AMOUNT = 10;
   static BUILT_IN_EXCEPTIONS = null;
 
-  constructor(type, message) {
+  constructor(type, message, input, cursor) {
     super(message.getString(), null);
     this.type = type;
     this.message = message;

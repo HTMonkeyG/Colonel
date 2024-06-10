@@ -100,16 +100,19 @@ class CommandDispatcher {
    * A forked command will not bubble up any {@link CommandSyntaxException}s, and the 'result' returned will turn into
    * 'amount of successful commands executes'.
    *
-   * After each and any command is ran, a registered callback given to {@link CommandDispacher.setConsumer()}
+   * After each and any command is ran, a registered callback given to {@link setConsumer()}
    * will be notified of the result and success of the command. You can use that method to gather more meaningful
    * results than this method will return, especially when a command forks.
    *
-   * @param {ParseResults} parse - the result of a successful {@link CommandDispacher.parse()}
+   * @param {ParseResults|StringReader|String} parse - the result of a successful {@link parse()}
+   * @param {*} source - a custom "source" object, usually representing the originator of this command
    * @return {Number} a numeric result from a "command" that was performed.
-   * @throws CommandSyntaxException if the command failed to parse or execute
-   * @throws RuntimeException if the command failed to execute and was not handled gracefully
+   * @throws {CommandSyntaxException} if the command failed to parse or execute
+   * @throws {Error} if the command failed to execute and was not handled gracefully
    */
-  execute(parse) {
+  execute(parse, source) {
+    if (typeof parse == 'string' || parse instanceof StringReader)
+      parse = this.parse(parse, source);
     if (parse.getReader().canRead()) {
       if (parse.getExceptions().size == 1) {
         throw parse.getExceptions().values().next().value;
@@ -192,7 +195,9 @@ class CommandDispatcher {
 
         context.withCommand(child.getCommand());
         if (reader.canRead(child.getRedirect() == null ? 2 : 1)) {
+          // Skip argument separator
           reader.skip();
+
           if (child.getRedirect() != null) {
             var childContext = new CommandContextBuilder(this, source, child.getRedirect(), reader.getCursor())
               , parse = parseNodes(child.getRedirect(), reader, childContext);
@@ -232,6 +237,85 @@ class CommandDispatcher {
     }
 
     return parseNodes(this.root, command, context);
+  }
+
+  /**
+     * Finds a valid path to a given node on the command tree.
+     *
+     * There may theoretically be multiple paths to a node on the tree, especially with the use of forking or redirecting.
+     * As such, this method makes no guarantees about which path it finds. It will not look at forks or redirects,
+     * and find the first instance of the target node on the tree.
+     *
+     * The only guarantee made is that for the same command tree and the same version of this library, the result of
+     * this method will <b>always</b> be a valid input for {@link findNode()}, which should return the same node
+     * as provided to this method.
+     *
+     * @param {CommandNode} target - the target node you are finding a path for
+     * @return {String[]} a path to the resulting node, or an empty list if it was not found
+     */
+  getPath(target) {
+    function addPaths(node, result, parents) {
+      var current = Array.from(parents);
+      current.push(node);
+      result.push(current);
+
+      for (var child of node.getChildren()) {
+        addPaths(child, result, current);
+      }
+    }
+
+    var nodes = [];
+    addPaths(this.root, nodes, []);
+
+    for (var list of nodes) {
+      if (list.at(-1) == target) {
+        var result = [];
+        for (var node of list) {
+          if (node != this.root) {
+            result.push(node.getName());
+          }
+        }
+        return result;
+      }
+    }
+
+    return [];
+  }
+
+  /**
+   * Finds a node by its path
+   *
+   * Paths may be generated with {@link getPath()}, and are guaranteed (for the same tree, and the
+   * same version of this library) to always produce the same valid node by this method.
+   *
+   * If a node could not be found at the specified path, then null will be returned.
+   *
+   * @param {String[]} path a generated path to a node
+   * @return {CommandNode} the node at the given path, or null if not found
+   */
+  findNode(path) {
+    var node = this.root;
+    for (var name of path) {
+      node = node.getChild(name);
+      if (node == null) {
+        return null;
+      }
+    }
+    return node;
+  }
+
+  /**
+   * Scans the command tree for potential ambiguous commands.
+   *
+   * <p>This is a shortcut for {@link CommandNode.findAmbiguities()} on {@link getRoot()}.</p>
+   *
+   * <p>Ambiguities are detected by testing every {@link CommandNode.getExamples()} on one node verses every sibling
+   * node. This is not fool proof, and relies a lot on the providers of the used argument types to give good examples.</p>
+   *
+   * @param consumer a callback to be notified of potential ambiguities
+   */
+  findAmbiguities(consumer) {
+    this.root.findAmbiguities(consumer);
   }
 }
 

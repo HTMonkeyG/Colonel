@@ -90,19 +90,32 @@ class CommandNode {
       return Object.values(this.arguments);
     }
   }
+
+  equals(o) {
+    if (this == o) return true;
+    if (!(o instanceof CommandNode)) return false;
+    if (!this.children.equals(o.children)) return false;
+    if (this.command != null ? this.command != o.command : o.command != null) return false;
+    return true;
+  }
   getName() { }
   parse() { }
 }
 
 class RootCommandNode extends CommandNode {
-  constructor() { super(void 0, c => true, void 0); }
+  constructor() { super(void 0, c => true, void 0, s => [s.getSource()], false); }
   getName() { return "" }
   toString() { return "<root>" }
+  equals(o) {
+    if (this == o) return true;
+    if (!(o instanceof RootCommandNode)) return false;
+    return super.equals(o);
+  }
 }
 
 class ArgumentCommandNode extends CommandNode {
-  constructor(name, type, command, requirement, redirect) {
-    super(command, requirement, redirect);
+  constructor(name, type, command, requirement, redirect, modifier, forks) {
+    super(command, requirement, redirect, modifier, forks);
     this.name = name;
     this.type = type;
   }
@@ -118,11 +131,19 @@ class ArgumentCommandNode extends CommandNode {
     contextBuilder.withArgument(this.name, parsed);
     contextBuilder.withNode(this, parsed.getRange());
   }
+
+  equals(o) {
+    if (this == o) return true;
+    if (!(o instanceof ArgumentCommandNode)) return false;
+    if (!this.name.equals(o.name)) return false;
+    if (!this.type.equals(o.type)) return false;
+    return super.equals(o);
+  }
 }
 
 class LiteralCommandNode extends CommandNode {
-  constructor(literal, command, requirement, redirect) {
-    super(command, requirement, redirect);
+  constructor(literal, command, requirement, redirect, modifier, forks) {
+    super(command, requirement, redirect, modifier, forks);
     this.literal = literal;
     this.literalLowerCase = literal.toLocaleLowerCase();
   }
@@ -154,6 +175,13 @@ class LiteralCommandNode extends CommandNode {
     }
 
     throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.literalIncorrect().createWithContext(reader, literal);
+  }
+
+  equals(o) {
+    if (this == o) return true;
+    if (!(o instanceof LiteralCommandNode)) return false;
+    if (!this.literal.equals(o.literal)) return false;
+    return super.equals(o);
   }
 }
 

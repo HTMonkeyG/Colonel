@@ -31,10 +31,9 @@ class ArgumentType {
 }
 
 class BoolArgumentType extends ArgumentType {
-  // static EXAMPLES = ["true", "false"];
+  static EXAMPLES = ["true", "false"];
 
   constructor() { super() }
-  static bool() { return new BoolArgumentType() }
   static getBool(context, name) { return context.getArgument(name, Boolean.class); }
   parse(reader) { return reader.readBoolean() }
 
@@ -52,4 +51,44 @@ class BoolArgumentType extends ArgumentType {
   getExamples() { return BoolArgumentType.EXAMPLES }*/
 }
 
-export { ArgumentType, BoolArgumentType };
+class IntegerArgumentType extends ArgumentType {
+  static EXAMPLES = ["0", "123", "-123"];
+
+  constructor(minimum, maximum) {
+    super();
+    this.minimum = Math.round(minimum);
+    this.maximum = Math.round(maximum);
+  }
+
+  static getInteger(context, name) { return context.getArgument(name); }
+
+  getMinimum() { return this.minimum }
+  getMaximum() { return this.maximum }
+
+  parse(reader) {
+    var start = reader.getCursor()
+      , result = reader.readInt();
+    if (result < this.minimum) {
+      reader.setCursor(start);
+      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.integerTooLow().createWithContext(reader, result, this.minimum);
+    }
+    if (result > this.maximum) {
+      reader.setCursor(start);
+      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.integerTooHigh().createWithContext(reader, result, this.maximum);
+    }
+    return result;
+  }
+
+  getExamples() { return IntegerArgumentType.EXAMPLES }
+}
+
+function bool() { return new BoolArgumentType() }
+function integer(min, max) { return new IntegerArgumentType(typeof min == 'number' ? -2147483648 : min, typeof max == 'number' ? 2147483647 : max) }
+
+export {
+  ArgumentType,
+  BoolArgumentType,
+  IntegerArgumentType,
+  integer,
+  bool
+};

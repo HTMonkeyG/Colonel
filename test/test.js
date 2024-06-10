@@ -1,31 +1,42 @@
-import { StringReader } from "../include/StringReader.js";
-import { CommandDispacher } from "../CommanDispatcher.js";
-import { LiteralArgumentBuilder, RequiredArgumentBuilder } from "../include/ArgumentBuilder.js";
+import { StringReader, CommandDispatcher, literal, argument } from "../main.js";
 import { BoolArgumentType } from "../include/ArgumentType.js";
-import { ContextChain } from "../include/Context.js";
 import { EventEmitter } from "node:events";
 
-var t = new StringReader("qwq true");
+var t = new StringReader("qwq true true true qaq");
 
-var k = new CommandDispacher();
+var k = new CommandDispatcher();
 
 var ev = new EventEmitter();
 k.setConsumer(ev);
 ev.on("oncommandcomplete", (...args) => console.log(args, 9))
 
-k.register(
-  (new LiteralArgumentBuilder("qwq")
-    .then(
-      new RequiredArgumentBuilder("emmm", new BoolArgumentType())
-        .executes((e) => console.log(e, 9999999))
-    ))
-    .then(
-      new LiteralArgumentBuilder("awa")
-        .executes((e) => console.log(e, 88888))
-    )
-);
-//k.register(new LiteralArgumentBuilder("testfor").then(new LiteralArgumentBuilder("emmm").executes((e)=>console.log(e, 9999999))));
-console.log(k, 0)
-var p = k.parse(t, null)
+var re;
 
-console.log(k.execute(p))
+re = k.register(
+  literal("qwq")
+);
+
+console.log(re)
+
+k.register(literal("qwq").then(
+  argument("emmm", new BoolArgumentType())
+    .executes((e) => {console.log(e, 9999999);return 1})
+      .redirect(re)
+)
+.then(
+  literal("awa")
+    .executes((e) => {console.log(e, 88888);return 1})
+      //.redirect(re)
+)
+.then(
+  literal("qaq")
+    .executes((e) => {console.log(e, 7777);return 1})
+      //.redirect(re)
+))
+
+console.log(re)
+//k.register(new LiteralArgumentBuilder("testfor").then(new LiteralArgumentBuilder("emmm").executes((e)=>console.log(e, 9999999))));
+//console.log(k.getRoot().getChild("qwq").getChild("emmm").getRedirect(), 0)
+var p = k.parse(t, null)
+console.log(p, 1212)
+console.log(k.execute(p), 1)

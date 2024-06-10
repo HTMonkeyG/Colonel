@@ -23,7 +23,7 @@ SOFTWARE.
 */
 /* Adapted from Brigadier by HTMonkeyG */
 
-import { RootCommandNode, LiteralCommandNode, ArgumentCommandNode } from "./CommandNode.js";
+import { RootCommandNode, LiteralCommandNode, ArgumentCommandNode, CommandNode } from "./CommandNode.js";
 
 class ArgumentBuilder {
   constructor() {
@@ -49,12 +49,11 @@ class ArgumentBuilder {
     this.requirement = requirement;
     return this.getThis();
   }
-  redirect(target, modifier) { return this.forward(target, modifier ? modifier : null, false) }
+  redirect(target, modifier) { return this.forward(target, modifier == null ? null : o => [modifier(o)], false) }
   fork(target, modifier) { return this.forward(target, modifier, true) }
   forward(target, modifier, fork) {
-    if (!this.arguments.getChildren().isEmpty()) {
+    if (this.arguments.getChildren().length)
       throw new Error("Cannot forward a node with children");
-    }
     this.target = target;
     this.modifier = modifier;
     this.forks = fork;
@@ -65,7 +64,10 @@ class ArgumentBuilder {
     if (this.target) {
       throw new Error("Cannot add children to a redirected node");
     }
-    this.arguments.addChild(argument.build());
+    if (argument instanceof CommandNode)
+      this.arguments.addChild(argument);
+    else
+      this.arguments.addChild(argument.build());
     return this.getThis();
   }
   executes(command) {
@@ -83,7 +85,7 @@ class LiteralArgumentBuilder extends ArgumentBuilder {
   getLiteral() { return this.literal }
   getCommand() { return this.command }
   build() {
-    var result = new LiteralCommandNode(this.getLiteral(), this.getCommand(), this.getRequirement(), this.getRedirect());
+    var result = new LiteralCommandNode(this.getLiteral(), this.getCommand(), this.getRequirement(), this.getRedirect(), this.getRedirectModifier(), this.isFork());
     for (var argument of this.getArguments()) {
       result.addChild(argument);
     }
@@ -109,7 +111,7 @@ class RequiredArgumentBuilder extends ArgumentBuilder {
     return getThis();
   }
   build() {
-    var result = new ArgumentCommandNode(this.getName(), this.getType(), this.getCommand(), this.getRequirement(), this.getRedirect());
+    var result = new ArgumentCommandNode(this.getName(), this.getType(), this.getCommand(), this.getRequirement(), this.getRedirect(), this.getRedirectModifier(), this.isFork());
     for (var argument of this.getArguments()) {
       result.addChild(argument);
     }

@@ -123,34 +123,36 @@ class CommandContext {
     )
   }
 
-  /*getArgument(name, clazz) {
+  getArgument(name, clazz) {
     var argument = this.arguments[name];
     if (argument == null)
       throw new Error("No such argument '" + name + "' exists on this command");
 
     var result = argument.getResult();
+    /*
     if (PRIMITIVE_TO_WRAPPER.getOrDefault(clazz, clazz).isAssignableFrom(result.getClass())) {
       return result;
     } else {
       throw new Error("Argument '" + name + "' is defined as " + result.getClass().getSimpleName() + ", not " + clazz);
-    }
+    }*/
+    return result
   }
-
+  /*
   equals(final Object o) {
     if (this == o) return true;
     if (!(o instanceof CommandContext)) return false;
-
+    
     final CommandContext that = (CommandContext) o;
-
+    
     if (!arguments.equals(that.arguments)) return false;
     if (!rootNode.equals(that.rootNode)) return false;
     if (nodes.size() != that.nodes.size() || !nodes.equals(that.nodes)) return false;
     if (command != null ? !command.equals(that.command) : that.command != null) return false;
     if (!source.equals(that.source)) return false;
     if (child != null ? !child.equals(that.child) : that.child != null) return false;
-
+    
     return true;
-  }*/
+  }  */
 }
 
 class CommandContextBuilder {
@@ -315,7 +317,7 @@ class ContextChain {
   static runExecutable(executable, source, resultConsumer, forkedMode) {
     var contextToUse = executable.copyFor(source);
     try {
-      var result = executable.getCommand()(contextToUse);
+      var result = executable.getCommand().call(null, contextToUse) || 0;
       resultConsumer.emit("oncommandcomplete", contextToUse, true, result);
       return forkedMode ? 1 : result;
     } catch (ex) {

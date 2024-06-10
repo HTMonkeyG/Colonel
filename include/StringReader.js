@@ -26,10 +26,11 @@ SOFTWARE.
 import { CommandSyntaxException } from "./Exceptions.js";
 
 const SYNTAX_ESCAPE = '\\'
-  , SYNTAX_DOUBLE_QUOTE = '"';
+  , SYNTAX_DOUBLE_QUOTE = '"'
+  , SYNTAX_SINGLE_QUOTE = '\'';
 
 class StringRange {
-  StringRange(start, end) {
+  constructor(start, end) {
     this.start = start;
     this.end = end;
   }
@@ -56,7 +57,7 @@ class StringRange {
       return true
     if (!(o instanceof StringRange))
       return false
-    return start == o.start && end == o.end;
+    return this.start == o.start && this.end == o.end;
   }
 }
 
@@ -74,10 +75,10 @@ class StringReader {
 
   getString() { return this.string }
   getCursor() { return this.cursor }
-  getRemainingLength() { return string.length - cursor }
-  getTotalLength() { return string.length }
-  getRead() { return string.substring(0, cursor) }
-  getRemaining() { return string.substring(cursor) }
+  getRemainingLength() { return this.string.length - this.cursor }
+  getTotalLength() { return this.string.length }
+  getRead() { return this.string.substring(0, this.cursor) }
+  getRemaining() { return this.string.substring(this.cursor) }
 
   setCursor(cursor) { this.cursor = cursor }
 
@@ -90,7 +91,7 @@ class StringReader {
   isAllowedNumber(c) { return /[0-9.\-]/.test(c) }
   isAllowedInUnquotedString(c) { return /[0-9A-Za-z_\-.+]/.test(c) }
   isWhitespace(c) { return /[\t\n\u000B\f\r\u001C-\u0020\u1680\u180E\u2000-\u2006\u2008-\u200B\u205F\u3000\uFEFF]/.test(c) }
-  isQuotedStringStart(c) { return c == SYNTAX_DOUBLE_QUOTE /*|| c == SYNTAX_SINGLE_QUOTE*/ }
+  isQuotedStringStart(c) { return c == SYNTAX_DOUBLE_QUOTE || c == SYNTAX_SINGLE_QUOTE }
   skipWhitespace() { while (this.canRead() && this.isWhitespace(this.peek())) this.skip() }
 
   readInt() {
