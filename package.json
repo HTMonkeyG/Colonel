@@ -1,6 +1,6 @@
 {
-  "name": "colonel",
-  "version": "0.0.1",
+  "name": "colonel-dispatcher",
+  "version": "1.0.0",
   "description": "A native JS adaption of Brigadier.",
   "main": "main.js",
   "type": "module",
